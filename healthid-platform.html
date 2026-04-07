@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HealthID — Patient-Controlled Medical Records</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal: #0d9488;
+    --teal-light: #ccfbf1;
+    --teal-mid: #14b8a6;
+    --teal-dark: #0f766e;
+    --coral: #f43f5e;
+    --coral-light: #ffe4e6;
+    --amber: #f59e0b;
+    --amber-light: #fef3c7;
+    --blue: #3b82f6;
+    --blue-light: #dbeafe;
+    --navy: #0f172a;
+    --slate: #1e293b;
+    --slate2: #334155;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --surface: #f8fafc;
+    --white: #ffffff;
+    --green: #22c55e;
+    --green-light: #dcfce7;
+    --purple: #8b5cf6;
+    --purple-light: #ede9fe;
+    --red: #ef4444;
+    --font: 'Sora', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font);
+    background: var(--surface);
+    color: var(--navy);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  .topbar {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--teal-dark);
+    letter-spacing: -0.02em;
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--teal), var(--teal-mid));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .nav-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 4px;
+  }
+  .nav-tab {
+    padding: 7px 20px;
+    border-radius: 7px;
+    border: none;
+    background: transparent;
+    font-family: var(--font);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav-tab.active {
+    background: var(--white);
+    color: var(--teal-dark);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--teal-light), var(--teal-mid));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--teal-dark);
+    cursor: pointer;
+  }
+  .health-id-badge {
+    background: var(--teal-light);
+    color: var(--teal-dark);
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+  }
+
+  /* VIEWS */
+  .view { display: none; animation: fadeIn 0.25s ease; }
+  .view.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* PATIENT DASHBOARD */
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    min-height: calc(100vh - 60px);
+  }
+
+  .sidebar {
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    padding: 1.5rem 0;
+    position: sticky;
+    top: 60px;
+    height: calc(100vh - 60px);
+    overflow-y: auto;
+  }
+
+  .sidebar-section { margin-bottom: 1.5rem; }
+  .sidebar-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    padding: 0 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 1.5rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--slate2);
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .sidebar-item:hover { background: var(--surface); }
+  .sidebar-item.active {
+    background: var(--teal-light);
+    color: var(--teal-dark);
+    border-left-color: var(--teal);
+  }
+  .sidebar-item .icon { font-size: 1rem; width: 20px; text-align: center; }
+
+  .patient-profile {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1rem;
+  }
+  .profile-card {
+    background: linear-gradient(135deg, var(--teal-dark), var(--teal));
+    border-radius: 14px;
+    padding: 1.25rem;
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+  .profile-card::before {
+    content: '';
+    position: absolute;
+    top: -20px; right: -20px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+  }
+  .profile-name { font-size: 0.95rem; font-weight: 600; margin-bottom: 3px; }
+  .profile-sub { font-size: 0.72rem; opacity: 0.8; }
+  .profile-hid {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    background: rgba(255,255,255,0.15);
+    padding: 5px 10px;
+    border-radius: 6px;
+    margin-top: 10px;
+    display: inline-block;
+    letter-spacing: 0.05em;
+  }
+
+  /* MAIN CONTENT */
+  .main-content { padding: 2rem; overflow-y: auto; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+  .section-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--navy);
+    letter-spacing: -0.02em;
+  }
+  .section-sub { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+
+  /* STAT CARDS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .stat-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-label { font-size: 0.75rem; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
+  .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--navy); letter-spacing: -0.03em; }
+  .stat-badge {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+  }
+  .stat-badge.teal { background: var(--teal-light); }
+  .stat-badge.amber { background: var(--amber-light); }
+  .stat-badge.blue { background: var(--blue-light); }
+  .stat-badge.green { background: var(--green-light); }
+
+  /* ACCESS REQUEST PANEL */
+  .access-request {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2rem;
+    border-left: 4px solid var(--amber);
+    animation: slideIn 0.3s ease;
+  }
+  @keyframes slideIn { from { opacity:0; transform: translateX(-10px); } to { opacity:1; transform: translateX(0); } }
+  .request-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .pulse-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--amber);
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.3); }
+  }
+  .request-title { font-weight: 700; font-size: 0.9rem; color: var(--navy); }
+  .request-body { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .request-info { font-size: 0.82rem; color: var(--muted); }
+  .request-info strong { color: var(--navy); }
+  .btn-row { display: flex; gap: 8px; flex-shrink: 0; }
+  .btn {
+    padding: 8px 18px;
+    border-radius: 8px;
+    border: none;
+    font-family: var(--font);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-approve {
+    background: var(--teal);
+    color: white;
+  }
+  .btn-approve:hover { background: var(--teal-dark); transform: translateY(-1px); }
+  .btn-deny {
+    background: var(--coral-light);
+    color: var(--coral);
+  }
+  .btn-deny:hover { background: #fecdd3; }
+
+  /* CONTENT COLUMNS */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+
+  /* TIMELINE */
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+  .card-title { font-size: 0.9rem; font-weight: 700; color: var(--navy); }
+  .timeline { position: relative; }
+  .timeline-item {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 1rem;
+    position: relative;
+  }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 15px; top: 32px;
+    width: 2px; height: calc(100% + 8px);
+    background: var(--border);
+  }
+  .timeline-item:last-child::before { display: none; }
+  .timeline-dot {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; flex-shrink: 0;
+  }
+  .td-teal { background: var(--teal-light); }
+  .td-blue { background: var(--blue-light); }
+  .td-amber { background: var(--amber-light); }
+  .td-purple { background: var(--purple-light); }
+  .timeline-content { flex: 1; }
+  .timeline-title { font-size: 0.83rem; font-weight: 600; color: var(--navy); }
+  .timeline-date { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+  .timeline-desc { font-size: 0.78rem; color: var(--slate2); margin-top: 3px; }
+
+  /* PRESCRIPTION CARDS */
+  .rx-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+    transition: all 0.2s;
+  }
+  .rx-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); transform: translateY(-2px); }
+  .rx-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .rx-name { font-size: 0.85rem; font-weight: 700; color: var(--navy); }
+  .rx-dosage { font-size: 0.72rem; color: var(--teal); font-weight: 600; font-family: var(--mono); }
+  .rx-freq { font-size: 0.75rem; color: var(--muted); margin-top: 3px; }
+  .rx-doc { font-size: 0.7rem; color: var(--muted); border-top: 1px solid var(--border); padding-top: 8px; margin-top: 8px; }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.68rem;
+    font-weight: 600;
+  }
+  .tag-active { background: var(--green-light); color: #166534; }
+  .tag-warning { background: var(--amber-light); color: #92400e; }
+  .tag-info { background: var(--blue-light); color: #1e40af; }
+
+  /* DRUG INTERACTION */
+  .interaction-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .interaction-item:last-child { border-bottom: none; }
+  .interaction-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0;
+  }
+  .int-warn { background: var(--amber-light); }
+  .int-safe { background: var(--green-light); }
+  .int-danger { background: var(--coral-light); }
+  .interaction-name { font-size: 0.82rem; font-weight: 600; color: var(--navy); }
+  .interaction-desc { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+  .interaction-level {
+    margin-left: auto;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .lvl-moderate { background: var(--amber-light); color: #92400e; }
+  .lvl-safe { background: var(--green-light); color: #166534; }
+  .lvl-high { background: var(--coral-light); color: #9f1239; }
+
+  /* EMERGENCY BANNER */
+  .emergency-banner {
+    background: linear-gradient(135deg, #fff1f2, var(--coral-light));
+    border: 1.5px solid #fda4af;
+    border-radius: 14px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+  }
+  .emergency-left { display: flex; align-items: center; gap: 12px; }
+  .emergency-icon { font-size: 1.5rem; }
+  .emergency-title { font-size: 0.9rem; font-weight: 700; color: #9f1239; }
+  .emergency-info { font-size: 0.78rem; color: #be123c; }
+  .emergency-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .e-chip {
+    background: white;
+    border: 1px solid #fda4af;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #9f1239;
+  }
+
+  /* QR CODE DISPLAY */
+  .qr-section {
+    text-align: center;
+    padding: 1.5rem;
+  }
+  .qr-box {
+    width: 140px; height: 140px;
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    font-size: 0.65rem;
+    font-family: var(--mono);
+    position: relative;
+    overflow: hidden;
+  }
+  .qr-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 2px;
+    padding: 10px;
+    width: 100%; height: 100%;
+  }
+  .qr-cell {
+    border-radius: 1px;
+  }
+  .qr-dark { background: var(--navy); }
+  .qr-light { background: transparent; }
+  .qr-label { font-size: 0.75rem; color: var(--muted); margin-top: 8px; }
+  .qr-id { font-family: var(--mono); font-weight: 600; color: var(--teal-dark); font-size: 0.8rem; }
+
+  /* UPLOAD ZONE */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--surface);
+  }
+  .upload-zone:hover { border-color: var(--teal); background: var(--teal-light); }
+  .upload-icon { font-size: 2rem; margin-bottom: 8px; }
+  .upload-text { font-size: 0.85rem; font-weight: 600; color: var(--navy); }
+  .upload-sub { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+
+  /* OCR DEMO */
+  .ocr-result {
+    background: var(--navy);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: #7dd3fc;
+    margin-top: 1rem;
+    display: none;
+  }
+  .ocr-result.visible { display: block; animation: fadeIn 0.3s ease; }
+  .ocr-line { margin-bottom: 4px; }
+  .ocr-key { color: #86efac; }
+  .ocr-val { color: #fde68a; }
+
+  /* DOCTOR DASHBOARD */
+  .doctor-grid { display: grid; grid-template-columns: 300px 1fr; min-height: calc(100vh - 60px); }
+
+  .doctor-sidebar {
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    padding: 1.5rem;
+  }
+  .doctor-card {
+    background: linear-gradient(135deg, #1e3a5f, #1e40af);
+    border-radius: 14px;
+    padding: 1.25rem;
+    color: white;
+    margin-bottom: 1.5rem;
+  }
+  .doctor-name { font-size: 0.95rem; font-weight: 600; margin-bottom: 2px; }
+  .doctor-spec { font-size: 0.75rem; opacity: 0.75; }
+  .doctor-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255,255,255,0.15);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    margin-top: 10px;
+  }
+
+  .search-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 1.5rem;
+  }
+  .search-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-family: var(--font);
+    font-size: 0.82rem;
+    outline: none;
+    transition: border-color 0.2s;
+    background: var(--surface);
+  }
+  .search-input:focus { border-color: var(--blue); background: white; }
+  .btn-search {
+    background: var(--blue);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 0 16px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: background 0.2s;
+  }
+  .btn-search:hover { background: #2563eb; }
+
+  .patient-list-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+  }
+  .patient-list-item:hover, .patient-list-item.selected {
+    background: var(--blue-light);
+    border-color: #bfdbfe;
+  }
+  .patient-avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+  .patient-info .p-name { font-size: 0.82rem; font-weight: 600; color: var(--navy); }
+  .patient-info .p-id { font-size: 0.68rem; font-family: var(--mono); color: var(--muted); }
+  .access-status {
+    margin-left: auto;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+  .status-approved { background: var(--green-light); color: #166534; }
+  .status-pending { background: var(--amber-light); color: #92400e; }
+  .status-none { background: var(--surface); color: var(--muted); border: 1px solid var(--border); }
+
+  /* PATIENT VIEW IN DOCTOR */
+  .patient-view-header {
+    background: white;
+    border-bottom: 1px solid var(--border);
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .patient-view-name { font-size: 1.1rem; font-weight: 700; color: var(--navy); }
+  .patient-view-meta { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+  .access-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .access-timer {
+    background: var(--green-light);
+    color: #166534;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    font-family: var(--mono);
+  }
+
+  .doctor-main { padding: 2rem; }
+  .records-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+
+  .record-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .record-row:last-child { border-bottom: none; }
+  .record-icon {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0;
+  }
+  .ri-blue { background: var(--blue-light); }
+  .ri-teal { background: var(--teal-light); }
+  .ri-amber { background: var(--amber-light); }
+  .ri-purple { background: var(--purple-light); }
+  .record-name { font-size: 0.82rem; font-weight: 600; color: var(--navy); }
+  .record-date { font-size: 0.7rem; color: var(--muted); margin-top: 1px; }
+  .btn-view-record {
+    margin-left: auto;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 5px 12px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--blue);
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.15s;
+  }
+  .btn-view-record:hover { background: var(--blue-light); border-color: var(--blue); }
+
+  /* ALLERGIES TABLE */
+  .allergy-tag {
+    display: inline-flex;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    margin: 2px;
+  }
+  .al-high { background: var(--coral-light); color: #9f1239; }
+  .al-med { background: var(--amber-light); color: #92400e; }
+
+  /* REQUEST ACCESS PANEL */
+  .request-access-panel {
+    background: linear-gradient(135deg, var(--blue-light), #f0f9ff);
+    border: 1.5px solid #bae6fd;
+    border-radius: 14px;
+    padding: 1.5rem;
+    text-align: center;
+  }
+  .rap-icon { font-size: 2.5rem; margin-bottom: 10px; }
+  .rap-title { font-size: 0.9rem; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+  .rap-sub { font-size: 0.78rem; color: var(--muted); margin-bottom: 1rem; }
+  .btn-request {
+    background: var(--blue);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 24px;
+    font-family: var(--font);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-request:hover { background: #2563eb; transform: translateY(-1px); }
+
+  /* TABS */
+  .tab-bar {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0;
+  }
+  .tab-btn {
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    font-family: var(--font);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.15s;
+  }
+  .tab-btn.active { color: var(--teal); border-bottom-color: var(--teal); font-weight: 600; }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; animation: fadeIn 0.2s ease; }
+
+  /* NOTIFICATIONS */
+  .notif-dot {
+    width: 8px; height: 8px;
+    background: var(--coral);
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: 4px;
+    animation: pulse 1.5s infinite;
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,0.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 18px;
+    padding: 2rem;
+    width: 440px;
+    max-width: 90vw;
+    animation: modalIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes modalIn { from { opacity:0; transform: scale(0.9); } to { opacity:1; transform: scale(1); } }
+  .modal-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; color: var(--navy); }
+  .modal-sub { font-size: 0.8rem; color: var(--muted); margin-bottom: 1.5rem; }
+  .modal-info-row { display: flex; gap: 8px; margin-bottom: 10px; font-size: 0.82rem; }
+  .modal-label { color: var(--muted); width: 100px; flex-shrink: 0; }
+  .modal-value { color: var(--navy); font-weight: 500; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 1.5rem; }
+  .btn-lg {
+    flex: 1;
+    padding: 11px;
+    border-radius: 10px;
+    border: none;
+    font-family: var(--font);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-approve-lg { background: var(--teal); color: white; }
+  .btn-approve-lg:hover { background: var(--teal-dark); }
+  .btn-deny-lg { background: var(--coral-light); color: var(--coral); }
+  .btn-deny-lg:hover { background: #fecdd3; }
+
+  /* SUCCESS TOAST */
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--navy);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    z-index: 300;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .section-badge {
+    background: var(--teal-light);
+    color: var(--teal-dark);
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 5px;
+    letter-spacing: 0.05em;
+  }
+
+  .add-btn {
+    background: var(--teal);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s;
+  }
+  .add-btn:hover { background: var(--teal-dark); }
+
+  .vital-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.82rem;
+  }
+  .vital-row:last-child { border-bottom: none; }
+  .vital-label { color: var(--muted); }
+  .vital-value { font-weight: 600; color: var(--navy); }
+  .vital-status { font-size: 0.68rem; padding: 2px 7px; border-radius: 5px; }
+  .vs-normal { background: var(--green-light); color: #166534; }
+  .vs-attention { background: var(--amber-light); color: #92400e; }
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topbar">
+  <div class="logo">
+    <div class="logo-icon">🏥</div>
+    HealthID
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchView('patient')">Patient Portal</button>
+    <button class="nav-tab" onclick="switchView('doctor')">Doctor Portal</button>
+  </div>
+  <div class="topbar-right">
+    <div class="health-id-badge" id="topbar-hid">HID-2024-78432</div>
+    <div class="avatar" id="topbar-avatar">AR</div>
+  </div>
+</nav>
+
+<!-- PATIENT VIEW -->
+<div class="view active" id="view-patient">
+  <div class="dashboard-grid">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="patient-profile">
+        <div class="profile-card">
+          <div class="profile-name">Arjun Ramesh</div>
+          <div class="profile-sub">28 yrs · Male · O+</div>
+          <div class="profile-hid">HID-2024-78432</div>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Overview</div>
+        <div class="sidebar-item active" onclick="switchTab('overview')">
+          <span class="icon">🏠</span> Dashboard
+        </div>
+        <div class="sidebar-item" onclick="switchTab('timeline')">
+          <span class="icon">📅</span> Health Timeline
+        </div>
+        <div class="sidebar-item" onclick="switchTab('prescriptions')">
+          <span class="icon">💊</span> Prescriptions
+        </div>
+        <div class="sidebar-item" onclick="switchTab('reports')">
+          <span class="icon">🧪</span> Lab Reports
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Safety</div>
+        <div class="sidebar-item" onclick="switchTab('interactions')">
+          <span class="icon">⚗️</span> Drug Interactions
+        </div>
+        <div class="sidebar-item" onclick="switchTab('access')">
+          <span class="icon">🔐</span> Access Logs
+        </div>
+        <div class="sidebar-item" onclick="switchTab('emergency')">
+          <span class="icon">🆘</span> Emergency Profile
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">My QR Code</div>
+        <div class="qr-section">
+          <div class="qr-box" id="qr-visual"></div>
+          <div class="qr-label">Scan to share your ID</div>
+          <div class="qr-id">HID-2024-78432</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main-content">
+      <!-- ACCESS REQUEST MODAL TRIGGER -->
+      <div class="access-request" id="access-request-banner">
+        <div class="request-header">
+          <div class="pulse-dot"></div>
+          <div class="request-title">New Access Request</div>
+          <div class="tag tag-warning" style="margin-left: auto;">Live</div>
+        </div>
+        <div class="request-body">
+          <div class="request-info">
+            <strong>Dr. Priya Nair</strong> (Cardiologist, Apollo Hospitals) is requesting access to your medical history
+            <br>Estimated duration: <strong>30 minutes</strong>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-approve" onclick="openApprovalModal()">✓ Approve</button>
+            <button class="btn btn-deny" onclick="denyAccess()">✗ Deny</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Active Medications</div>
+          <div class="stat-value">4</div>
+          <div class="stat-badge teal">💊</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Consultations</div>
+          <div class="stat-value">12</div>
+          <div class="stat-badge blue">🩺</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Lab Reports</div>
+          <div class="stat-value">8</div>
+          <div class="stat-badge amber">🧪</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Last Checkup</div>
+          <div class="stat-value" style="font-size: 1rem; margin-top: 4px;">Mar 18</div>
+          <div class="stat-badge green">✓</div>
+        </div>
+      </div>
+
+      <!-- EMERGENCY BANNER -->
+      <div class="emergency-banner">
+        <div class="emergency-left">
+          <div class="emergency-icon">🆘</div>
+          <div>
+            <div class="emergency-title">Emergency Profile — Always Accessible</div>
+            <div class="emergency-info">Critical info accessible without patient approval in emergencies</div>
+          </div>
+        </div>
+        <div class="emergency-chips">
+          <div class="e-chip">🩸 O+</div>
+          <div class="e-chip">⚠️ Penicillin Allergy</div>
+          <div class="e-chip">💉 No Diabetes</div>
+          <div class="e-chip">❤️ Mild Hypertension</div>
+        </div>
+      </div>
+
+      <!-- TWO COL -->
+      <div class="two-col">
+        <!-- TIMELINE -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📅 Recent Timeline</div>
+            <span class="section-badge">2024</span>
+          </div>
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-dot td-teal">🩺</div>
+              <div class="timeline-content">
+                <div class="timeline-title">Cardiology Consultation</div>
+                <div class="timeline-date">March 18, 2024 · Dr. Priya Nair</div>
+                <div class="timeline-desc">BP: 140/90 — Adjusted Amlodipine dosage</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot td-blue">🧪</div>
+              <div class="timeline-content">
+                <div class="timeline-title">Complete Blood Count</div>
+                <div class="timeline-date">March 10, 2024 · Thyrocare</div>
+                <div class="timeline-desc">All values within normal range</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot td-amber">💊</div>
+              <div class="timeline-content">
+                <div class="timeline-title">Prescription Updated</div>
+                <div class="timeline-date">Feb 22, 2024 · Dr. Suresh Kumar</div>
+                <div class="timeline-desc">Added Metformin 500mg · Changed Atorvastatin to 20mg</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot td-purple">🏥</div>
+              <div class="timeline-content">
+                <div class="timeline-title">General Checkup</div>
+                <div class="timeline-date">Jan 5, 2024 · AIIMS OPD</div>
+                <div class="timeline-desc">Annual physical — No critical findings</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VITALS + UPLOAD -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📊 Latest Vitals</div>
+              <div class="tag tag-info">Mar 18</div>
+            </div>
+            <div class="vital-row">
+              <span class="vital-label">Blood Pressure</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span class="vital-value">140/90</span>
+                <span class="vital-status vs-attention">Watch</span>
+              </div>
+            </div>
+            <div class="vital-row">
+              <span class="vital-label">Heart Rate</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span class="vital-value">76 bpm</span>
+                <span class="vital-status vs-normal">Normal</span>
+              </div>
+            </div>
+            <div class="vital-row">
+              <span class="vital-label">Blood Sugar</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span class="vital-value">108 mg/dL</span>
+                <span class="vital-status vs-normal">Normal</span>
+              </div>
+            </div>
+            <div class="vital-row">
+              <span class="vital-label">BMI</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span class="vital-value">24.2</span>
+                <span class="vital-status vs-normal">Healthy</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📁 Upload Records</div>
+            </div>
+            <div class="upload-zone" onclick="simulateOCR()">
+              <div class="upload-icon">📷</div>
+              <div class="upload-text">Upload Prescription / Report</div>
+              <div class="upload-sub">OCR auto-extracts medicines & dosages</div>
+            </div>
+            <div class="ocr-result" id="ocr-output">
+              <div class="ocr-line"><span class="ocr-key">📄 Extracted: </span><span class="ocr-val">Prescription_March2024.jpg</span></div>
+              <div class="ocr-line"><span class="ocr-key">💊 Medicine 1: </span><span class="ocr-val">Amlodipine 5mg — Once daily</span></div>
+              <div class="ocr-line"><span class="ocr-key">💊 Medicine 2: </span><span class="ocr-val">Atorvastatin 20mg — Bedtime</span></div>
+              <div class="ocr-line"><span class="ocr-key">🩺 Doctor: </span><span class="ocr-val">Dr. Priya Nair, MBBS, MD</span></div>
+              <div class="ocr-line"><span class="ocr-key">🏥 Hospital: </span><span class="ocr-val">Apollo Hospitals, Chennai</span></div>
+              <div class="ocr-line" style="margin-top: 6px; color: #86efac;">✓ Saved to your health records</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRESCRIPTIONS -->
+      <div class="section-header">
+        <div>
+          <div class="section-title">Active Prescriptions</div>
+          <div class="section-sub">4 medications currently prescribed</div>
+        </div>
+        <button class="add-btn">+ Add</button>
+      </div>
+      <div class="three-col">
+        <div class="rx-card">
+          <div class="rx-header">
+            <div>
+              <div class="rx-name">Amlodipine</div>
+              <div class="rx-dosage">5mg</div>
+            </div>
+            <div class="tag tag-active">Active</div>
+          </div>
+          <div class="rx-freq">Once daily · Morning</div>
+          <div class="rx-doc">Dr. Priya Nair · Mar 18, 2024</div>
+        </div>
+        <div class="rx-card">
+          <div class="rx-header">
+            <div>
+              <div class="rx-name">Atorvastatin</div>
+              <div class="rx-dosage">20mg</div>
+            </div>
+            <div class="tag tag-active">Active</div>
+          </div>
+          <div class="rx-freq">Once daily · Bedtime</div>
+          <div class="rx-doc">Dr. Suresh Kumar · Feb 22, 2024</div>
+        </div>
+        <div class="rx-card">
+          <div class="rx-header">
+            <div>
+              <div class="rx-name">Metformin</div>
+              <div class="rx-dosage">500mg</div>
+            </div>
+            <div class="tag tag-active">Active</div>
+          </div>
+          <div class="rx-freq">Twice daily · With meals</div>
+          <div class="rx-doc">Dr. Suresh Kumar · Feb 22, 2024</div>
+        </div>
+      </div>
+
+      <!-- DRUG INTERACTIONS -->
+      <div class="section-header" style="margin-top: 1rem;">
+        <div>
+          <div class="section-title">⚗️ Drug Interaction Checker</div>
+          <div class="section-sub">Monitoring your active prescriptions for risks</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="interaction-item">
+          <div class="interaction-icon int-warn">⚠️</div>
+          <div>
+            <div class="interaction-name">Amlodipine + Atorvastatin</div>
+            <div class="interaction-desc">May slightly increase Atorvastatin blood levels. Monitor for muscle pain.</div>
+          </div>
+          <div class="interaction-level lvl-moderate">Moderate</div>
+        </div>
+        <div class="interaction-item">
+          <div class="interaction-icon int-safe">✓</div>
+          <div>
+            <div class="interaction-name">Metformin + Amlodipine</div>
+            <div class="interaction-desc">No clinically significant interaction known.</div>
+          </div>
+          <div class="interaction-level lvl-safe">Safe</div>
+        </div>
+        <div class="interaction-item">
+          <div class="interaction-icon int-safe">✓</div>
+          <div>
+            <div class="interaction-name">Metformin + Atorvastatin</div>
+            <div class="interaction-desc">No clinically significant interaction known.</div>
+          </div>
+          <div class="interaction-level lvl-safe">Safe</div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- DOCTOR VIEW -->
+<div class="view" id="view-doctor">
+  <div class="doctor-grid">
+    <!-- DOCTOR SIDEBAR -->
+    <aside class="doctor-sidebar">
+      <div class="doctor-card">
+        <div class="doctor-name">Dr. Priya Nair</div>
+        <div class="doctor-spec">Cardiologist · MBBS, MD, DM</div>
+        <div class="doctor-badge">🏥 Apollo Hospitals, Chennai</div>
+      </div>
+
+      <div class="search-bar">
+        <input type="text" class="search-input" placeholder="Enter Patient ID or name..." id="patient-search">
+        <button class="btn-search" onclick="searchPatient()">🔍</button>
+      </div>
+
+      <div class="sidebar-label" style="padding: 0; margin-bottom: 8px;">Recent Patients</div>
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <div class="patient-list-item selected" onclick="selectPatient('arjun')">
+          <div class="patient-avatar" style="background: var(--teal-light); color: var(--teal-dark);">AR</div>
+          <div class="patient-info">
+            <div class="p-name">Arjun Ramesh</div>
+            <div class="p-id">HID-2024-78432</div>
+          </div>
+          <div class="access-status status-approved">Approved</div>
+        </div>
+        <div class="patient-list-item" onclick="selectPatient('meena')">
+          <div class="patient-avatar" style="background: var(--purple-light); color: var(--purple);">MS</div>
+          <div class="patient-info">
+            <div class="p-name">Meena Subramanian</div>
+            <div class="p-id">HID-2023-45291</div>
+          </div>
+          <div class="access-status status-pending">Pending</div>
+        </div>
+        <div class="patient-list-item" onclick="selectPatient('vijay')">
+          <div class="patient-avatar" style="background: var(--amber-light); color: #92400e;">VK</div>
+          <div class="patient-info">
+            <div class="p-name">Vijay Kumar</div>
+            <div class="p-id">HID-2024-12038</div>
+          </div>
+          <div class="access-status status-none">No access</div>
+        </div>
+        <div class="patient-list-item" onclick="selectPatient('anu')">
+          <div class="patient-avatar" style="background: var(--coral-light); color: var(--coral);">AL</div>
+          <div class="patient-info">
+            <div class="p-name">Anusha Lakshmi</div>
+            <div class="p-id">HID-2022-98743</div>
+          </div>
+          <div class="access-status status-approved">Approved</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 1.5rem;">
+        <div class="sidebar-label" style="padding: 0; margin-bottom: 8px;">Scan QR Code</div>
+        <div class="request-access-panel">
+          <div class="rap-icon">📱</div>
+          <div class="rap-title">Scan Patient QR</div>
+          <div class="rap-sub">Point camera at patient's HealthID QR code to instantly load their profile</div>
+          <button class="btn-request" onclick="showToast('📷 QR scanner would open on mobile device')">Open Scanner</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- PATIENT RECORD VIEW -->
+    <div style="overflow-y: auto;">
+      <div class="patient-view-header">
+        <div>
+          <div class="patient-view-name">Arjun Ramesh — Patient Records</div>
+          <div class="patient-view-meta">28 yrs · Male · O+ · HID-2024-78432 · Last visit: March 18, 2024</div>
+        </div>
+        <div class="access-bar">
+          <div class="access-timer" id="access-timer">🔓 Session: 28:42 left</div>
+          <button class="btn" style="background: var(--coral-light); color: var(--coral);" onclick="showToast('Access session ended')">End Session</button>
+        </div>
+      </div>
+
+      <div class="doctor-main">
+        <!-- ALLERGIES HIGHLIGHT -->
+        <div class="emergency-banner" style="margin-bottom: 1.5rem;">
+          <div class="emergency-left">
+            <div class="emergency-icon">⚠️</div>
+            <div>
+              <div class="emergency-title">Known Allergies & Critical Info</div>
+              <div class="emergency-info">Always check before prescribing</div>
+            </div>
+          </div>
+          <div class="emergency-chips">
+            <div class="e-chip al-high" style="background: var(--coral-light); border-color: #fda4af;">🚫 Penicillin</div>
+            <div class="e-chip al-high" style="background: var(--coral-light); border-color: #fda4af;">🚫 Aspirin (mild)</div>
+            <div class="e-chip" style="background: white; border-color: #fda4af; color: #9f1239;">🩸 O Positive</div>
+            <div class="e-chip" style="background: white; border-color: #fda4af; color: #9f1239;">❤️ Hypertension</div>
+          </div>
+        </div>
+
+        <!-- RECORDS TABS -->
+        <div class="tab-bar">
+          <button class="tab-btn active" onclick="switchDocTab('history', this)">Medical History</button>
+          <button class="tab-btn" onclick="switchDocTab('prescriptions', this)">Prescriptions</button>
+          <button class="tab-btn" onclick="switchDocTab('reports', this)">Lab Reports</button>
+          <button class="tab-btn" onclick="switchDocTab('vitals', this)">Vitals</button>
+          <button class="tab-btn" onclick="switchDocTab('notes', this)">Add Notes</button>
+        </div>
+
+        <!-- HISTORY TAB -->
+        <div class="tab-content active" id="doc-tab-history">
+          <div class="records-grid">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Past Consultations</div>
+                <span class="tag tag-info">12 visits</span>
+              </div>
+              <div class="record-row">
+                <div class="record-icon ri-blue">🩺</div>
+                <div>
+                  <div class="record-name">Cardiology — Hypertension follow-up</div>
+                  <div class="record-date">March 18, 2024 · Dr. Priya Nair</div>
+                </div>
+                <button class="btn-view-record">View</button>
+              </div>
+              <div class="record-row">
+                <div class="record-icon ri-teal">🩺</div>
+                <div>
+                  <div class="record-name">General Medicine — Diabetes screening</div>
+                  <div class="record-date">Feb 22, 2024 · Dr. Suresh Kumar</div>
+                </div>
+                <button class="btn-view-record">View</button>
+              </div>
+              <div class="record-row">
+                <div class="record-icon ri-amber">🩺</div>
+                <div>
+                  <div class="record-name">Annual Physical Checkup</div>
+                  <div class="record-date">Jan 5, 2024 · AIIMS OPD</div>
+                </div>
+                <button class="btn-view-record">View</button>
+              </div>
+              <div class="record-row">
+                <div class="record-icon ri-purple">🩺</div>
+                <div>
+                  <div class="record-name">ENT — Sinus consultation</div>
+                  <div class="record-date">Nov 3, 2023 · Dr. Ravi Shankar</div>
+                </div>
+                <button class="btn-view-record">View</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Chronic Conditions</div>
+              </div>
+              <div class="record-row">
+                <div class="record-icon ri-amber">❤️</div>
+                <div>
+                  <div class="record-name">Hypertension (Stage 1)</div>
+                  <div class="record-date">Diagnosed: June 2022 · Managed with medication</div>
+                </div>
+              </div>
+              <div class="record-row">
+                <div class="record-icon ri-teal">📋</div>
+                <div>
+                  <div class="record-name">Prediabetes</div>
+                  <div class="record-date">Diagnosed: Feb 2024 · Diet + Metformin</div>
+                </div>
+              </div>
+              <div class="record-row">
+                <div class="record-icon ri-blue">🔬</div>
+                <div>
+                  <div class="record-name">Mild Hyperlipidemia</div>
+                  <div class="record-date">Diagnosed: Aug 2023 · Atorvastatin prescribed</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PRESCRIPTIONS TAB -->
+        <div class="tab-content" id="doc-tab-prescriptions">
+          <div class="three-col">
+            <div class="rx-card">
+              <div class="rx-header">
+                <div><div class="rx-name">Amlodipine</div><div class="rx-dosage">5mg</div></div>
+                <div class="tag tag-active">Active</div>
+              </div>
+              <div class="rx-freq">Once daily · Morning · 6 months</div>
+              <div class="rx-doc">Dr. Priya Nair · Mar 18, 2024</div>
+            </div>
+            <div class="rx-card">
+              <div class="rx-header">
+                <div><div class="rx-name">Atorvastatin</div><div class="rx-dosage">20mg</div></div>
+                <div class="tag tag-active">Active</div>
+              </div>
+              <div class="rx-freq">Once daily · Bedtime · 6 months</div>
+              <div class="rx-doc">Dr. Suresh Kumar · Feb 22, 2024</div>
+            </div>
+            <div class="rx-card">
+              <div class="rx-header">
+                <div><div class="rx-name">Metformin</div><div class="rx-dosage">500mg</div></div>
+                <div class="tag tag-active">Active</div>
+              </div>
+              <div class="rx-freq">Twice daily · With meals · 3 months</div>
+              <div class="rx-doc">Dr. Suresh Kumar · Feb 22, 2024</div>
+            </div>
+          </div>
+          <div style="margin-top: 1.5rem;">
+            <div class="section-header">
+              <div class="section-title" style="font-size: 1rem;">Issue New Prescription</div>
+            </div>
+            <div class="card">
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 10px; align-items: end;">
+                <div>
+                  <div class="sidebar-label" style="padding:0; margin-bottom: 5px;">Medicine Name</div>
+                  <input type="text" class="search-input" placeholder="e.g. Ramipril" style="width: 100%;">
+                </div>
+                <div>
+                  <div class="sidebar-label" style="padding:0; margin-bottom: 5px;">Dosage</div>
+                  <input type="text" class="search-input" placeholder="e.g. 5mg" style="width: 100%;">
+                </div>
+                <div>
+                  <div class="sidebar-label" style="padding:0; margin-bottom: 5px;">Frequency</div>
+                  <input type="text" class="search-input" placeholder="e.g. Once daily" style="width: 100%;">
+                </div>
+                <div>
+                  <div class="sidebar-label" style="padding:0; margin-bottom: 5px;">Duration</div>
+                  <input type="text" class="search-input" placeholder="e.g. 30 days" style="width: 100%;">
+                </div>
+                <button class="add-btn" onclick="showToast('✅ Prescription added to patient records')">Add</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- REPORTS TAB -->
+        <div class="tab-content" id="doc-tab-reports">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Lab Reports</div>
+              <span class="tag tag-info">8 reports</span>
+            </div>
+            <div class="record-row">
+              <div class="record-icon ri-teal">🧪</div>
+              <div><div class="record-name">Complete Blood Count (CBC)</div><div class="record-date">March 10, 2024 · Thyrocare Labs</div></div>
+              <div class="tag tag-active" style="margin-right: 8px;">Normal</div>
+              <button class="btn-view-record">View PDF</button>
+            </div>
+            <div class="record-row">
+              <div class="record-icon ri-blue">🩺</div>
+              <div><div class="record-name">HbA1c (Glycated Hemoglobin)</div><div class="record-date">March 10, 2024 · Thyrocare Labs</div></div>
+              <div class="tag tag-warning" style="margin-right: 8px;">5.9%</div>
+              <button class="btn-view-record">View PDF</button>
+            </div>
+            <div class="record-row">
+              <div class="record-icon ri-amber">💉</div>
+              <div><div class="record-name">Lipid Profile</div><div class="record-date">Feb 15, 2024 · SRL Diagnostics</div></div>
+              <div class="tag tag-warning" style="margin-right: 8px;">Borderline</div>
+              <button class="btn-view-record">View PDF</button>
+            </div>
+            <div class="record-row">
+              <div class="record-icon ri-purple">🔬</div>
+              <div><div class="record-name">Kidney Function Test (KFT)</div><div class="record-date">Jan 20, 2024 · AIIMS Lab</div></div>
+              <div class="tag tag-active" style="margin-right: 8px;">Normal</div>
+              <button class="btn-view-record">View PDF</button>
+            </div>
+            <div class="record-row">
+              <div class="record-icon ri-teal">🏥</div>
+              <div><div class="record-name">ECG — 12 Lead</div><div class="record-date">March 18, 2024 · Apollo Hospitals</div></div>
+              <div class="tag tag-active" style="margin-right: 8px;">Normal Sinus</div>
+              <button class="btn-view-record">View</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- VITALS TAB -->
+        <div class="tab-content" id="doc-tab-vitals">
+          <div class="two-col">
+            <div class="card">
+              <div class="card-header"><div class="card-title">Current Vitals</div><span class="tag tag-info">March 18</span></div>
+              <div class="vital-row"><span class="vital-label">Blood Pressure</span><div style="display:flex;align-items:center;gap:8px;"><span class="vital-value">140/90 mmHg</span><span class="vital-status vs-attention">Elevated</span></div></div>
+              <div class="vital-row"><span class="vital-label">Heart Rate</span><div style="display:flex;align-items:center;gap:8px;"><span class="vital-value">76 bpm</span><span class="vital-status vs-normal">Normal</span></div></div>
+              <div class="vital-row"><span class="vital-label">SpO2</span><div style="display:flex;align-items:center;gap:8px;"><span class="vital-value">98%</span><span class="vital-status vs-normal">Normal</span></div></div>
+              <div class="vital-row"><span class="vital-label">Temperature</span><div style="display:flex;align-items:center;gap:8px;"><span class="vital-value">98.6°F</span><span class="vital-status vs-normal">Normal</span></div></div>
+              <div class="vital-row"><span class="vital-label">Weight</span><div style="display:flex;align-items:center;gap:8px;"><span class="vital-value">72 kg</span><span class="vital-status vs-normal">Healthy</span></div></div>
+              <div class="vital-row"><span class="vital-label">Fasting Sugar</span><div style="display:flex;align-items:center;gap:8px;"><span class="vital-value">108 mg/dL</span><span class="vital-status vs-attention">Borderline</span></div></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">BP Trend (6 months)</div></div>
+              <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
+                <div style="display:flex;align-items:center;gap:10px;font-size:0.78rem;">
+                  <span style="color:var(--muted);width:60px;">Mar 18</span>
+                  <div style="flex:1;background:var(--surface);border-radius:4px;overflow:hidden;height:8px;">
+                    <div style="width:85%;background:var(--amber);height:100%;border-radius:4px;"></div>
+                  </div>
+                  <span style="font-weight:600;color:var(--navy);width:70px;">140/90</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;font-size:0.78rem;">
+                  <span style="color:var(--muted);width:60px;">Feb 22</span>
+                  <div style="flex:1;background:var(--surface);border-radius:4px;overflow:hidden;height:8px;">
+                    <div style="width:88%;background:var(--amber);height:100%;border-radius:4px;"></div>
+                  </div>
+                  <span style="font-weight:600;color:var(--navy);width:70px;">145/92</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;font-size:0.78rem;">
+                  <span style="color:var(--muted);width:60px;">Jan 15</span>
+                  <div style="flex:1;background:var(--surface);border-radius:4px;overflow:hidden;height:8px;">
+                    <div style="width:78%;background:var(--teal);height:100%;border-radius:4px;"></div>
+                  </div>
+                  <span style="font-weight:600;color:var(--navy);width:70px;">132/85</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;font-size:0.78rem;">
+                  <span style="color:var(--muted);width:60px;">Dec 10</span>
+                  <div style="flex:1;background:var(--surface);border-radius:4px;overflow:hidden;height:8px;">
+                    <div style="width:82%;background:var(--teal);height:100%;border-radius:4px;"></div>
+                  </div>
+                  <span style="font-weight:600;color:var(--navy);width:70px;">138/88</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;font-size:0.78rem;">
+                  <span style="color:var(--muted);width:60px;">Nov 5</span>
+                  <div style="flex:1;background:var(--surface);border-radius:4px;overflow:hidden;height:8px;">
+                    <div style="width:75%;background:var(--teal);height:100%;border-radius:4px;"></div>
+                  </div>
+                  <span style="font-weight:600;color:var(--navy);width:70px;">128/82</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;font-size:0.78rem;">
+                  <span style="color:var(--muted);width:60px;">Oct 1</span>
+                  <div style="flex:1;background:var(--surface);border-radius:4px;overflow:hidden;height:8px;">
+                    <div style="width:70%;background:var(--green);height:100%;border-radius:4px;"></div>
+                  </div>
+                  <span style="font-weight:600;color:var(--navy);width:70px;">122/78</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NOTES TAB -->
+        <div class="tab-content" id="doc-tab-notes">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Add Consultation Notes</div>
+              <span class="tag tag-info">April 7, 2026</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div>
+                <div class="sidebar-label" style="padding:0;margin-bottom:6px;">Chief Complaint</div>
+                <input type="text" class="search-input" placeholder="Patient's main complaint..." style="width:100%;">
+              </div>
+              <div>
+                <div class="sidebar-label" style="padding:0;margin-bottom:6px;">Clinical Findings</div>
+                <textarea class="search-input" rows="3" placeholder="Examination findings, observations..." style="width:100%;resize:vertical;height:80px;"></textarea>
+              </div>
+              <div>
+                <div class="sidebar-label" style="padding:0;margin-bottom:6px;">Diagnosis</div>
+                <input type="text" class="search-input" placeholder="Primary diagnosis..." style="width:100%;">
+              </div>
+              <div>
+                <div class="sidebar-label" style="padding:0;margin-bottom:6px;">Plan & Instructions</div>
+                <textarea class="search-input" rows="3" placeholder="Treatment plan, follow-up instructions..." style="width:100%;resize:vertical;height:80px;"></textarea>
+              </div>
+              <div style="display:flex;gap:10px;">
+                <button class="btn-request" onclick="showToast('✅ Notes saved to patient record')">Save to Patient Record</button>
+                <button class="btn" style="background:var(--surface);color:var(--muted);border:1px solid var(--border);">Save Draft</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APPROVAL MODAL -->
+<div class="modal-overlay" id="approval-modal">
+  <div class="modal">
+    <div style="font-size: 2.5rem; margin-bottom: 12px; text-align: center;">🔐</div>
+    <div class="modal-title" style="text-align:center;">Access Request</div>
+    <div class="modal-sub" style="text-align:center;">A doctor is requesting access to your medical records</div>
+    <div style="background: var(--surface); border-radius: 12px; padding: 1rem; margin-bottom: 1rem;">
+      <div class="modal-info-row"><span class="modal-label">Doctor</span><span class="modal-value">Dr. Priya Nair, MD</span></div>
+      <div class="modal-info-row"><span class="modal-label">Specialty</span><span class="modal-value">Cardiology</span></div>
+      <div class="modal-info-row"><span class="modal-label">Hospital</span><span class="modal-value">Apollo Hospitals, Chennai</span></div>
+      <div class="modal-info-row"><span class="modal-label">Duration</span><span class="modal-value">30 minutes (temporary)</span></div>
+      <div class="modal-info-row"><span class="modal-label">Access Level</span><span class="modal-value">Read-only (no edit)</span></div>
+    </div>
+    <div style="background: var(--amber-light); border-radius: 10px; padding: 10px 14px; font-size: 0.78rem; color: #92400e; margin-bottom: 1rem;">
+      ⏱ This request will expire in <strong>4 minutes 32 seconds</strong>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-lg btn-deny-lg" onclick="denyModal()">✗ Deny Access</button>
+      <button class="btn-lg btn-approve-lg" onclick="approveModal()">✓ Approve Access</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // VIEW SWITCHING
+  function switchView(v) {
+    document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+    document.querySelector('#view-' + v).classList.add('active');
+    document.querySelectorAll('.nav-tab').forEach((t,i) => {
+      t.classList.toggle('active', (i === 0 && v === 'patient') || (i === 1 && v === 'doctor'));
+    });
+    if (v === 'doctor') {
+      document.getElementById('topbar-hid').textContent = 'DR-NAIR-4821';
+      document.getElementById('topbar-avatar').textContent = 'PN';
+    } else {
+      document.getElementById('topbar-hid').textContent = 'HID-2024-78432';
+      document.getElementById('topbar-avatar').textContent = 'AR';
+    }
+  }
+
+  // SIDEBAR TABS (patient)
+  function switchTab(tab) {
+    document.querySelectorAll('#view-patient .sidebar-item').forEach(el => el.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+  }
+
+  // DOCTOR TABS
+  function switchDocTab(tab, btn) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('doc-tab-' + tab).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // MODAL
+  function openApprovalModal() {
+    document.getElementById('approval-modal').classList.add('open');
+  }
+  function approveModal() {
+    document.getElementById('approval-modal').classList.remove('open');
+    document.getElementById('access-request-banner').style.display = 'none';
+    showToast('✅ Access granted to Dr. Priya Nair for 30 minutes');
+  }
+  function denyModal() {
+    document.getElementById('approval-modal').classList.remove('open');
+    document.getElementById('access-request-banner').style.display = 'none';
+    showToast('🚫 Access denied');
+  }
+  function denyAccess() {
+    document.getElementById('access-request-banner').style.display = 'none';
+    showToast('🚫 Access request denied');
+  }
+
+  // TOAST
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // OCR DEMO
+  function simulateOCR() {
+    const out = document.getElementById('ocr-output');
+    showToast('🔍 Extracting text with OCR...');
+    setTimeout(() => {
+      out.classList.add('visible');
+      showToast('✅ Prescription processed successfully');
+    }, 1200);
+  }
+
+  // PATIENT SEARCH
+  function searchPatient() {
+    const val = document.getElementById('patient-search').value;
+    if (val) showToast('🔍 Searching for: ' + val);
+    else showToast('Please enter a patient ID or name');
+  }
+
+  // SELECT PATIENT
+  function selectPatient(p) {
+    document.querySelectorAll('.patient-list-item').forEach(el => el.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+    const names = { arjun: 'Arjun Ramesh', meena: 'Meena Subramanian', vijay: 'Vijay Kumar', anu: 'Anusha Lakshmi' };
+    if (p !== 'arjun') showToast('📋 Loading records for ' + names[p] + '...');
+  }
+
+  // GENERATE QR (visual only)
+  function generateQR() {
+    const qr = document.getElementById('qr-visual');
+    const pattern = [
+      1,1,1,1,1,1,1,0,1,0,
+      1,0,0,0,0,0,1,0,0,1,
+      1,0,1,1,1,0,1,0,1,0,
+      1,0,1,1,1,0,1,0,0,1,
+      1,0,1,1,1,0,1,0,1,1,
+      1,0,0,0,0,0,1,0,0,0,
+      1,1,1,1,1,1,1,0,1,0,
+      0,0,0,0,0,0,0,0,1,1,
+      1,0,1,0,1,1,1,1,0,1,
+      0,1,0,0,1,0,0,1,0,0
+    ];
+    const grid = document.createElement('div');
+    grid.className = 'qr-grid';
+    pattern.forEach(cell => {
+      const d = document.createElement('div');
+      d.className = 'qr-cell ' + (cell ? 'qr-dark' : 'qr-light');
+      grid.appendChild(d);
+    });
+    qr.appendChild(grid);
+  }
+
+  // TIMER
+  let secs = 1722;
+  function updateTimer() {
+    const m = Math.floor(secs / 60), s = secs % 60;
+    document.getElementById('access-timer').textContent =
+      `🔓 Session: ${m}:${s.toString().padStart(2,'0')} left`;
+    if (secs > 0) secs--;
+  }
+  setInterval(updateTimer, 1000);
+
+  // Close modal on overlay click
+  document.getElementById('approval-modal').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+
+  generateQR();
+</script>
+</body>
+</html>
