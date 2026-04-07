@@ -153,7 +153,6 @@ body.dark{
 <script type="text/babel">
 const {useState,useEffect,useRef}=React;
 
-/* ─── ALL USERS DATA ─── */
 const ALL_USERS={
   "arjun.mehta":{
     credentials:{username:"9876543210",password:"482910"},
@@ -327,49 +326,6 @@ const ALL_USERS={
       {msg:"37 Military Hospital access set to inactive",time:"Aug 20, 2025",type:"revoke"},
     ],
   },
-
-  "admin":{
-    credentials:{username:"9000000001",password:"000000"},
-    patient:{
-      name:"Admin User",id:"PT-ADMIN-001",dob:"01 Jan 1985",
-      blood:"AB+",avatar:"AU",
-      conditions:["No active conditions"],
-      allergies:["None recorded"],
-    },
-    records:[
-      {id:1,date:"2025-10-10",doctor:"Dr. System Health",hospital:"MediVault Central",type:"General",summary:"Annual portal wellness check. All system integrations verified. Data integrity confirmed.",shared:false,files:1},
-    ],
-    vitals:[
-      {label:"Blood Pressure",value:"120/80",unit:"mmHg",status:"ok",icon:"🫀"},
-      {label:"Blood Glucose",value:"95",unit:"mg/dL",status:"ok",icon:"🩸"},
-      {label:"Heart Rate",value:"70",unit:"bpm",status:"ok",icon:"💓"},
-      {label:"BMI",value:"23.0",unit:"kg/m²",status:"ok",icon:"⚖️"},
-      {label:"SpO₂",value:"99%",unit:"",status:"ok",icon:"🫁"},
-      {label:"Temperature",value:"98.6",unit:"°F",status:"ok",icon:"🌡️"},
-    ],
-    bpData:[
-      {m:"Jun",s:118,d:76},{m:"Jul",s:120,d:78},{m:"Aug",s:119,d:77},
-      {m:"Sep",s:121,d:79},{m:"Oct",s:120,d:80},{m:"Nov",s:120,d:80},
-    ],
-    medications:[
-      {name:"Multivitamin",dose:"1 tablet",freq:"Once daily",by:"Dr. System Health",dur:"Ongoing"},
-    ],
-    schedule:[
-      {time:"8:00 AM",med:"Multivitamin",done:true},
-    ],
-    access:[
-      {name:"MediVault Central",role:"Administration",granted:"Jan 2024",level:"Full",active:true},
-    ],
-    metrics:{records:1,hospitals:1,medications:1,pending:0},
-    activity:[
-      {msg:"Admin portal last accessed",time:"Today",color:"var(--primary)"},
-      {msg:"System health check completed",time:"1 day ago",color:"var(--info)"},
-    ],
-    audit:[
-      {msg:"Admin accessed portal dashboard",time:"Today",type:"view"},
-      {msg:"System backup completed successfully",time:"Yesterday",type:"upload"},
-    ],
-  },
 };
 
 const VALID_USERS=Object.values(ALL_USERS).map(u=>u.credentials);
@@ -382,7 +338,6 @@ const NAV=[
   {id:"access",label:"Access Control",icon:"🔐"},
 ];
 
-/* ── LOGIN ── */
 function LoginPage({onLogin}){
   const [phone,setPhone]=useState("");
   const [otp,setOtp]=useState("");
@@ -395,15 +350,13 @@ function LoginPage({onLogin}){
 
   const shake=()=>{setShaking(true);setTimeout(()=>setShaking(false),400);};
 
-  // TODO (backend): Replace with POST /api/auth/login { phone, otp }
-  // Response: { success: true, user_id: "...", token: "..." }
   const handleLogin=()=>{
     if(!phone.trim()){setError("Please enter your phone number.");shake();return;}
     if(!otp.trim()){setError("Please enter your OTP.");shake();return;}
     if(!/^\d{10}$/.test(phone.replace(/\s/g,""))){setError("Please enter a valid 10-digit phone number.");shake();return;}
     if(!/^\d{6}$/.test(otp)){setError("OTP must be 6 digits.");shake();return;}
     setLoading(true);setError("");
-    // MOCK: remove this block once backend is ready
+
     setTimeout(()=>{
       const match=VALID_USERS.find(u=>u.username===phone.replace(/\s/g,""));
       if(match){
@@ -475,7 +428,6 @@ function LoginPage({onLogin}){
   );
 }
 
-/* ── SHARED COMPONENTS ── */
 function Badge({label,type="muted"}){return <span className={`badge badge-${type}`}>{label}</span>;}
 function AvatarEl({initials,size=38,bg}){
   return(
@@ -492,7 +444,6 @@ function Toggle({on,onToggle}){return(
   </button>
 );}
 
-/* ── DASHBOARD ── */
 function Dashboard({data}){
   const {metrics,vitals,activity,patient}=data;
   const metricCards=[
@@ -574,7 +525,6 @@ function Dashboard({data}){
   );
 }
 
-/* ── RECORDS ── */
 function Records({data}){
   const allTypes=["All",...new Set(data.records.map(r=>r.type))];
   const [filter,setFilter]=useState("All");
@@ -612,7 +562,6 @@ function Records({data}){
   );
 }
 
-/* ── VITALS ── */
 function Vitals({data}){
   const {vitals,bpData}=data;
   const maxS=Math.max(...bpData.map(b=>b.s));
@@ -659,7 +608,6 @@ function Vitals({data}){
   );
 }
 
-/* ── MEDICATIONS ── */
 function Medications({data}){
   const {medications,schedule}=data;
   return(
@@ -698,7 +646,6 @@ function Medications({data}){
   );
 }
 
-/* ── ACCESS CONTROL ── */
 function AccessControl({data}){
   const [accessList,setAccessList]=useState(data.access);
   const toggle=i=>setAccessList(prev=>prev.map((a,idx)=>idx===i?{...a,active:!a.active}:a));
@@ -748,7 +695,6 @@ function AccessControl({data}){
   );
 }
 
-/* ── APP ROOT ── */
 function App(){
   const [mode,setMode]=useState("light");
   const [tab,setTab]=useState("dashboard");
@@ -839,7 +785,6 @@ function App(){
     </div>
   );
 }
-
 ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 </script>
 </body>
