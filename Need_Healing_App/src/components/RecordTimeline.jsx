@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
+import DeliveryTrackingMap from './DeliveryTrackingMap';
 
 // ─── DECRYPTION (mirrors RecordForm encryptField) ────────────────────────────
 const APP_SALT = 'MediVault::E2EE::v1';
@@ -132,6 +133,9 @@ function RecordCard({ rec, index }) {
   const [decrypted, setDecrypted] = useState(null);
   const [expanded, setExpanded] = useState(false);
   const [decrypting, setDecrypting] = useState(false);
+  const [ordering, setOrdering] = useState(false);
+  const [orderComplete, setOrderComplete] = useState(false);
+  const [showMap, setShowMap] = useState(false);
 
   const meta = TYPE_META[rec.type] || { icon: '📄', color: '#94a3b8', label: 'Record' };
   const title = buildTitle(rec);
@@ -203,10 +207,56 @@ function RecordCard({ rec, index }) {
                   Added by {rec.addedByName}
                 </div>
               )}
+              {rec.type === 'prescription' && !orderComplete && (
+                <div className="mt-4 pt-4 border-t border-slate-700/50">
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOrdering(true);
+                      setTimeout(() => {
+                        setOrdering(false);
+                        setOrderComplete(true);
+                        setTimeout(() => setOrderComplete(false), 5000);
+                      }, 2000);
+                    }}
+                    disabled={ordering}
+                    className="w-full py-3 bg-indigo-500/20 hover:bg-indigo-500/40 text-indigo-300 font-bold rounded-xl transition-all border border-indigo-500/50 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(99,102,241,0.2)]"
+                  >
+                    {ordering ? (
+                       <><div className="record-spinner small"></div> <span>Processing Order...</span></>
+                    ) : (
+                       <><span>📦</span> <span>Order Refill / Home Delivery</span></>
+                    )}
+                  </button>
+                </div>
+              )}
+              {orderComplete && (
+                <div className="mt-4 pt-4 border-t border-slate-700/50">
+                  <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-xl text-green-400 text-sm font-medium flex gap-2 mb-3">
+                    <span>✓</span> Order placed! Secure drone delivery processing.
+                  </div>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowMap(true);
+                    }}
+                    className="w-full py-3 bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-400 font-bold rounded-xl transition-all border border-emerald-500/50 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.2)] animate-pulse hover:animate-none"
+                  >
+                    <span>📡</span> Track Live Delivery
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
       )}
+      
+      {/* ─── MAP MODAL ─── */}
+      <AnimatePresence>
+        {showMap && (
+          <DeliveryTrackingMap onClose={() => setShowMap(false)} />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

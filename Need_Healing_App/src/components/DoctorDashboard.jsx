@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { collection, addDoc, query, where, onSnapshot, doc, getDocs, orderBy } from 'firebase/firestore';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import RecordForm from './RecordForm';
 import RecordTimeline from './RecordTimeline';
 import QRScanner from './QRScanner';
+import { useWebRTC } from '../hooks/useWebRTC';
 
 export default function DoctorDashboard({ user }) {
   const [scannedId, setScannedId] = useState('');
@@ -15,6 +16,31 @@ export default function DoctorDashboard({ user }) {
   const [activeTab, setActiveTab] = useState('records'); // records, add_record
   const [patientInfo, setPatientInfo] = useState(null);
   const [patientUid, setPatientUid] = useState(null);
+
+  // Z-Triage Queue State
+  const { connectionState, messages, createTriageQueue, disconnect } = useWebRTC();
+  const [triageQueue, setTriageQueue] = useState([]);
+  
+  useEffect(() => {
+    // Process incoming P2P WebRTC data payloads
+    if (messages.length > 0) {
+      const latest = messages[messages.length - 1]; // Assume latest message
+      if (latest.type === 'TRIAGE_SUBMISSION') {
+        setTriageQueue(prev => {
+          // Avoid duplicates by patientId
+          const filtered = prev.filter(p => p.patientId !== latest.patientId);
+          const newQueue = [...filtered, latest];
+          // Deterministic Auto-sorting by severity score
+          return newQueue.sort((a, b) => b.severityScore - a.severityScore);
+        });
+        toast.warning(`New Triage Alert: Priority ${latest.severityScore}/10 for ${latest.patientName}`);
+      }
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    return () => disconnect();
+  }, []);
 
   // Lookup patient UID from patient_id hash
   const findPatientUid = async (patientIdHash) => {
@@ -136,6 +162,20 @@ export default function DoctorDashboard({ user }) {
               </div>
             </div>
 
+            <div className="flex gap-4 mb-6 p-4 bg-slate-900/50 rounded-xl border border-slate-700/50 items-center justify-between">
+              <div>
+                <h3 className="font-bold text-fuchsia-400">Z-Triage Mesh</h3>
+                <p className="text-xs text-slate-400 mt-1">Host a zero-server peer-to-peer triage queue. ID: <code className="bg-slate-800 text-fuchsia-300 px-2 py-0.5 rounded">{user.uid}</code></p>
+              </div>
+              <button 
+                onClick={() => createTriageQueue(user.uid)}
+                disabled={connectionState !== 'disconnected' && connectionState !== 'failed'}
+                className={`py-2 px-4 rounded-lg font-bold text-sm transition-all ${connectionState === 'connected' ? 'bg-fuchsia-900/50 text-fuchsia-400 border border-fuchsia-500/50' : 'bg-fuchsia-600 hover:bg-fuchsia-500 text-white'}`}
+              >
+                {connectionState === 'connected' ? 'Mesh Active ✨' : connectionState === 'connecting' ? 'Initializing...' : 'Host Triage Node'}
+              </button>
+            </div>
+
             <div className="doctor-input-group">
               <div className="doctor-input-row">
                 <input
@@ -186,8 +226,11 @@ export default function DoctorDashboard({ user }) {
           </div>
 
           {/* Quick Guide */}
-          <div className="card doctor-guide-card">
-            <h3 className="font-bold mb-3">How it works</h3>
+          <div className="card doctor-guide-card relative overflow-hidden">
+            <h3 className="font-bold mb-3 flex items-center justify-between">
+               <span>How it works</span>
+               {connectionState === 'connected' && <span className="text-xs bg-fuchsia-500/20 text-fuchsia-400 border border-fuchsia-500/40 px-2 py-1 rounded flex items-center gap-2"><span className="w-2 h-2 bg-fuchsia-400 rounded-full animate-pulse"></span> Z-Triage Live</span>}
+            </h3>
             <div className="doctor-guide-steps">
               <div className="doctor-guide-step">
                 <div className="doctor-guide-num">1</div>
@@ -211,6 +254,55 @@ export default function DoctorDashboard({ user }) {
                 </div>
               </div>
             </div>
+
+            {/* Smart Queue Display for Z-Triage */}
+            {triageQueue.length > 0 && (
+              <div className="mt-8 border-t border-slate-700/50 pt-6">
+                <h3 className="font-bold mb-4 text-fuchsia-400 flex items-center gap-2">
+                  <span>🧠</span> Active Edge Triage Queue
+                </h3>
+                <div className="space-y-3">
+                  <AnimatePresence>
+                    {triageQueue.map((patient) => (
+                      <motion.div 
+                        key={patient.patientId}
+                        layout 
+                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                        className={`p-4 rounded-xl border flex items-start gap-4 ${
+                          patient.severityScore >= 8 ? 'bg-red-900/20 border-red-500/50' : 
+                          patient.severityScore >= 5 ? 'bg-orange-900/20 border-orange-500/50' : 
+                          'bg-slate-800 border-slate-700'
+                        }`}
+                      >
+                        <div className={`w-12 h-12 flex items-center justify-center rounded-lg font-black text-xl flex-shrink-0 ${
+                          patient.severityScore >= 8 ? 'bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.6)]' : 
+                          patient.severityScore >= 5 ? 'bg-orange-500 text-white' : 
+                          'bg-slate-700 text-slate-300'
+                        }`}>
+                          {patient.severityScore}
+                        </div>
+                        <div className="flex-1">
+                           <div className="flex justify-between items-center mb-1">
+                             <h4 className="font-bold text-white text-lg">{patient.patientName}</h4>
+                             <span className="text-xs text-slate-400 font-mono">{new Date(patient.timestamp).toLocaleTimeString()}</span>
+                           </div>
+                           <p className="text-sm font-mono text-fuchsia-200/80 mb-3 leading-relaxed">{patient.clinicalSummary}</p>
+                           <button 
+                             onClick={() => handleQRScan(patient.patientId)}
+                             className="w-full py-2 bg-white/10 hover:bg-white/20 text-white text-sm font-bold rounded-lg transition-colors"
+                           >
+                             Pull Records & Connect
+                           </button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       ) : (

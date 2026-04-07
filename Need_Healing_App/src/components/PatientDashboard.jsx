@@ -7,6 +7,10 @@ import { toast } from 'sonner';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import RecordTimeline from './RecordTimeline';
 import SelfReportForm from './SelfReportForm';
+import EmergencyMode from './EmergencyMode';
+import AiDrugScanner from './AiDrugScanner';
+import MedicationRemainder from './MedicationRemainder';
+import ZTriagePatient from './ZTriagePatient';
 
 const dummyHealthData = [
   { name: 'Mon', wellness: 85, records: 1 },
@@ -185,6 +189,8 @@ export default function PatientDashboard({ user }) {
   const [showSelfReport, setShowSelfReport] = useState(false);
   const [processingIds, setProcessingIds] = useState(new Set());
   const [showAudit, setShowAudit] = useState(true);
+  const [activeTab, setActiveTab] = useState('dashboard'); // dashboard, scanner, safety
+  const [showEmergency, setShowEmergency] = useState(false);
   const autoRevokeTimers = useRef({});
 
   // ── Access requests listener ────────────────────────────────────────────────
@@ -339,9 +345,67 @@ export default function PatientDashboard({ user }) {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="space-y-6"
+      className="space-y-6 pb-24"
     >
       <AnimatePresence>
+        {showEmergency && <EmergencyMode user={user} onClose={() => setShowEmergency(false)} />}
+      </AnimatePresence>
+
+      <button
+        onClick={() => setShowEmergency(true)}
+        className="fixed bottom-6 right-6 z-50 w-16 h-16 bg-red-600 hover:bg-red-500 rounded-full flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(239,68,68,0.6)] animate-pulse hover:animate-none transition-all hover:scale-110 active:scale-95 border-2 border-red-400"
+        title="Emergency SOS"
+      >
+        🚑
+      </button>
+
+      <div className="flex gap-2 border-b border-slate-700/50 pb-2 overflow-x-auto">
+        <button 
+          onClick={() => setActiveTab('dashboard')}
+          className={`px-4 py-2 rounded-lg font-bold whitespace-nowrap transition-all ${activeTab === 'dashboard' ? 'bg-primary text-white' : 'text-slate-400 hover:text-white'}`}
+        >
+          Overview
+        </button>
+        <button 
+          onClick={() => setActiveTab('scanner')}
+          className={`px-4 py-2 rounded-lg font-bold whitespace-nowrap transition-all flex items-center gap-2 ${activeTab === 'scanner' ? 'bg-cyan-600 text-white shadow-[0_0_15px_rgba(6,182,212,0.5)]' : 'text-slate-400 hover:text-white'}`}
+        >
+          <span>🧠</span> AI Checker
+        </button>
+        <button 
+          onClick={() => setActiveTab('triage')}
+          className={`px-4 py-2 rounded-lg font-bold whitespace-nowrap transition-all flex items-center gap-2 ${activeTab === 'triage' ? 'bg-fuchsia-600 text-white shadow-[0_0_15px_rgba(192,38,211,0.5)]' : 'text-slate-400 hover:text-white'}`}
+        >
+          <span>⚡</span> Active Triage
+        </button>
+        <button 
+          onClick={() => setActiveTab('safety')}
+          className={`px-4 py-2 rounded-lg font-bold whitespace-nowrap transition-all flex items-center gap-2 ${activeTab === 'safety' ? 'bg-green-600 text-white shadow-[0_0_15px_rgba(34,197,94,0.5)]' : 'text-slate-400 hover:text-white'}`}
+        >
+          <span>♻️</span> Safety R&D
+        </button>
+      </div>
+
+      {activeTab === 'scanner' && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <AiDrugScanner />
+        </motion.div>
+      )}
+
+      {activeTab === 'triage' && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <ZTriagePatient user={user} patientHistory={[]} />
+        </motion.div>
+      )}
+
+      {activeTab === 'safety' && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <MedicationRemainder />
+        </motion.div>
+      )}
+
+      <div style={{ display: activeTab === 'dashboard' ? 'block' : 'none' }}>
+        <AnimatePresence>
         {showSelfReport && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <SelfReportForm userId={user.uid} onClose={() => setShowSelfReport(false)} />
@@ -557,12 +621,12 @@ export default function PatientDashboard({ user }) {
         )}
       </div>
 
-      {/* ─── MEDICAL RECORDS TIMELINE ─── */}
       <RecordTimeline
         userId={user.uid}
         showAddButton={true}
         onAddRecord={() => setShowSelfReport(true)}
       />
+      </div>
     </motion.div>
   );
 }
