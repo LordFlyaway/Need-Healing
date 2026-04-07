@@ -1,0 +1,189 @@
+// ============================================================
+// Healthcare Home Delivery System — Prisma Schema
+// Database: PostgreSQL
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(cuid())
+  healthId       String    @unique
+  fullName       String
+  email          String    @unique
+  phone          String    @unique
+  dateOfBirth    DateTime
+  bloodGroup     String?
+  emergencyPhone String?
+  passwordHash   String
+  isVerified     Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  addresses      Address[]
+  prescriptions  Prescription[]
+  orders         DeliveryOrder[]
+  profile        UserProfile?
+
+  @@index([healthId])
+  @@index([email])
+}
+
+model UserProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  allergies   String[]
+  conditions  String[]
+  avatarUrl   String?
+  updatedAt   DateTime @updatedAt
+}
+
+model Address {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label         String
+  recipientName String
+  phone         String
+  street        String
+  city          String
+  state         String
+  pinCode       String
+  landmark      String?
+  addressType   AddressType @default(HOME)
+  isDefault     Boolean     @default(false)
+  isActive      Boolean     @default(true)
+  latitude      Float?
+  longitude     Float?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  orders        DeliveryOrder[]
+
+  @@index([userId])
+}
+
+enum AddressType {
+  HOME
+  OFFICE
+  OTHER
+}
+
+model Prescription {
+  id            String               @id @default(cuid())
+  userId        String
+  user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  doctorName    String
+  hospitalName  String?
+  issuedAt      DateTime
+  expiresAt     DateTime?
+  imageUrl      String?
+  ocrRawText    String?
+  isVerified    Boolean              @default(false)
+  verifiedById  String?
+  medicines     PrescribedMedicine[]
+  orders        DeliveryOrder[]
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  @@index([userId])
+}
+
+model PrescribedMedicine {
+  id             String       @id @default(cuid())
+  prescriptionId String
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  name           String
+  dosage         String
+  form           String?
+  frequency      String?
+  duration       String?
+  quantity       Int
+  instructions   String?
+  orderItems     OrderItem[]
+
+  @@index([prescriptionId])
+}
+
+model DeliveryOrder {
+  id               String         @id @default(cuid())
+  orderNumber      String         @unique
+  userId           String
+  user             User           @relation(fields: [userId], references: [id])
+  prescriptionId   String
+  prescription     Prescription   @relation(fields: [prescriptionId], references: [id])
+  addressId        String
+  address          Address        @relation(fields: [addressId], references: [id])
+  status           OrderStatus    @default(PENDING)
+  deliverySlot     String
+  slotDate         DateTime
+  slotStartTime    String
+  slotEndTime      String
+  deliveryAgentId  String?
+  agent            DeliveryAgent? @relation(fields: [deliveryAgentId], references: [id])
+  totalAmount      Float          @default(0)
+  deliveryFee      Float          @default(0)
+  isPaid           Boolean        @default(false)
+  paymentMethod    String?
+  estimatedETA     DateTime?
+  deliveredAt      DateTime?
+  notes            String?
+  items            OrderItem[]
+  statusHistory    OrderStatusLog[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([userId])
+  @@index([orderNumber])
+  @@index([status])
+}
+
+model OrderItem {
+  id                   String             @id @default(cuid())
+  orderId              String
+  order                DeliveryOrder      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  prescribedMedicineId String
+  medicine             PrescribedMedicine @relation(fields: [prescribedMedicineId], references: [id])
+  quantityOrdered      Int
+  unitPrice            Float              @default(0)
+  totalPrice           Float              @default(0)
+
+  @@index([orderId])
+}
+
+model OrderStatusLog {
+  id        String        @id @default(cuid())
+  orderId   String
+  order     DeliveryOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    OrderStatus
+  message   String?
+  timestamp DateTime      @default(now())
+  updatedBy String?
+}
+
+enum OrderStatus {
+  PENDING
+  PRESCRIPTION_VERIFIED
+  PROCESSING
+  PACKED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED
+  CANCELLED
+}
+
+model DeliveryAgent {
+  id          String          @id @default(cuid())
+  name        String
+  phone       String          @unique
+  isAvailable Boolean         @default(true)
+  latitude    Float?
+  longitude   Float?
+  orders      DeliveryOrder[]
+  createdAt   DateTime        @default(now())
+}
