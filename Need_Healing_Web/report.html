@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediVault - Technical Documentation</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Mermaid.js -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.4.0/dist/mermaid.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
+        .page-break { page-break-after: always; }
+        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+        h1, h2, h3 { color: #1e293b; }
+        .screenshot-container { margin: 1.5rem 0; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .screenshot-container img { width: 100%; height: auto; display: block; }
+        .tech-badge { background-color: #eff6ff; color: #2563eb; padding: 0.5rem 1rem; border-radius: 9999px; font-weight: 600; font-size: 0.875rem; display: inline-block; margin: 0.25rem; }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="p-12">
+    <div class="max-w-4xl mx-auto">
+        <!-- Title Page -->
+        <div class="card text-center py-24 mb-12">
+            <h1 class="text-5xl font-bold text-blue-900 mb-6">MediVault</h1>
+            <p class="text-2xl text-gray-600 mb-8">Advanced Health Records & Emergency Access System</p>
+            <p class="text-lg text-gray-500">Technical Architecture & Implementation Guide</p>
+        </div>
+        
+        <div class="page-break"></div>
+
+        <!-- System Overview -->
+        <div class="card">
+            <h2 class="text-3xl font-bold mb-4 border-b pb-2">1. System Overview</h2>
+            <p class="text-lg text-gray-700 leading-relaxed mb-4">
+                MediVault is a comprehensive medical records management platform designed to bridge the gap between patient data privacy and emergency accessibility. It provides two distinct yet interconnected layers: a highly secure <strong>Patient-Doctor ecosystem</strong> and a rapid-response <strong>Emergency Mode</strong>.
+            </p>
+            
+            <div class="screenshot-container">
+                <img src="./screenshot_dashboard.png" alt="Patient Dashboard Settings" />
+            </div>
+            <p class="text-sm text-center text-gray-500 italic mt-2">Figure 1.1: The main Patient Dashboard showing Medical History</p>
+        </div>
+
+        <!-- Tech Stack -->
+        <div class="card">
+            <h2 class="text-3xl font-bold mb-4 border-b pb-2">2. Technology Stack</h2>
+            <div class="grid grid-cols-2 gap-8 mb-6">
+                <div>
+                    <h3 class="text-xl font-semibold mb-3">Frontend Architecture</h3>
+                    <div class="mb-2"><span class="tech-badge">React 18</span> UI Library</div>
+                    <div class="mb-2"><span class="tech-badge">Vite</span> Build Tool & Bundler</div>
+                    <div class="mb-2"><span class="tech-badge">React Router</span> Client Navigation</div>
+                    <div class="mb-2"><span class="tech-badge">Tailwind CSS</span> Styling Engine</div>
+                    <div class="mb-2"><span class="tech-badge">Framer Motion</span> Animations & Transitions</div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold mb-3">Backend & Infrastructure</h3>
+                    <div class="mb-2"><span class="tech-badge">Firebase Auth</span> Security & Roles</div>
+                    <div class="mb-2"><span class="tech-badge">Firestore DB</span> Realtime NoSQL Database</div>
+                    <div class="mb-2"><span class="tech-badge">Service Workers</span> Offline Capabilities</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-break"></div>
+
+        <!-- Architecture Flow -->
+        <div class="card">
+            <h2 class="text-3xl font-bold mb-4 border-b pb-2">3. Architectural Flowcharts</h2>
+            <p class="text-lg text-gray-700 mb-6">Below is the core Data Architecture Flow.</p>
+            
+            <div class="flex justify-center mb-8">
+                <div class="mermaid">
+                    graph TD
+                        PatientUI[Patient Dashboard] -->|Write Authorizations| Auth
+                        DocUI[Doctor Portal] -->|Request Access| Auth
+                        Auth((Firebase Auth & Roles))
+                        Auth --> DB[Firestore Cloud Database]
+                        
+                        PatientUI -->|Generate ID| QR[QR Code Generator]
+                        EmergencyUI[Emergency Scanner] -->|Scan Patient QR| Scanner
+                        Scanner((html5-qrcode)) -->|Read-Only Request| DB
+                </div>
+            </div>
+        </div>
+
+        <div class="page-break"></div>
+
+        <!-- Emergency Mode Implementation -->
+        <div class="card">
+            <h2 class="text-3xl font-bold mb-4 border-b pb-2">4. Core Module Implementations</h2>
+            
+            <h3 class="text-2xl font-semibold mb-2 mt-6">4.1 Emergency Mode</h3>
+            <p class="text-gray-700 mb-3">Designed specifically for high-stress scenarios. It bypasses the standard login flow, relying strictly on cryptographically generated patient Emergency IDs encoded in QR format. The interface explicitly utilizes a dark, low-glare aesthetic to ensure optimal readability for first responders in intense situations.</p>
+            
+            <div class="screenshot-container">
+                <img src="./screenshot_ambulance.png" alt="Ambulance Emergency Interface" />
+            </div>
+            <p class="text-sm text-center text-gray-500 italic mt-2">Figure 4.1: The fast-access Emergency Paramedic Dashboard</p>
+        </div>
+
+    </div>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+            
+            setTimeout(() => {
+                const element = document.createElement('div');
+                element.id = 'render-done';
+                document.body.appendChild(element);
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

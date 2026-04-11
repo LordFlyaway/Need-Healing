@@ -1,0 +1,315 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   MEDIVAULT — HACKATHON ENHANCEMENT CSS
+   Paste this at the very end of index.css
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── STAGGER ANIMATION ───────────────────────────────────────────────────── */
+@keyframes staggerFadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .stagger-in {
+    animation: staggerFadeUp 0.35s ease both;
+  }
+  
+  /* ─── E2EE BANNER (inside RecordForm) ────────────────────────────────────── */
+  .e2ee-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 11px 14px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #10b98118 0%, #06b6d418 100%);
+    border: 1px solid #10b98140;
+    margin-bottom: 16px;
+  }
+  .e2ee-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .e2ee-title {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: #10b981;
+    letter-spacing: 0.04em;
+  }
+  .e2ee-subtitle {
+    display: block;
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+  
+  /* ─── ENCRYPTED FIELD LABEL / BADGE ──────────────────────────────────────── */
+  .encrypted-field-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .encrypted-badge-inline {
+    font-size: 10px;
+    font-weight: 600;
+    color: #10b981;
+    background: #10b98118;
+    border: 1px solid #10b98130;
+    border-radius: 6px;
+    padding: 1px 7px;
+    letter-spacing: 0.03em;
+  }
+  
+  /* encrypted textarea / input subtle glow */
+  .encrypted-textarea,
+  .encrypted-input {
+    border-color: #10b98140 !important;
+    background: rgba(16,185,129,0.03) !important;
+  }
+  .encrypted-textarea:focus,
+  .encrypted-input:focus {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 3px #10b98120 !important;
+  }
+  
+  /* ─── E2EE BADGE ON TIMELINE CARD ────────────────────────────────────────── */
+  .timeline-record-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .e2ee-badge-sm {
+    font-size: 13px;
+    opacity: 0.75;
+    cursor: default;
+  }
+  .e2ee-header-badge {
+    font-size: 11px;
+    font-weight: 600;
+    color: #10b981;
+    background: #10b98118;
+    border: 1px solid #10b98130;
+    border-radius: 6px;
+    padding: 2px 8px;
+    margin-left: 8px;
+  }
+  .e2ee-decrypted-notice {
+    font-size: 11px;
+    color: #10b981;
+    background: #10b98110;
+    border: 1px solid #10b98125;
+    border-radius: 7px;
+    padding: 6px 10px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .timeline-decrypting {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text3);
+    padding: 8px 0;
+  }
+  
+  /* write-request banner E2EE badge */
+  .write-e2ee-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #10b981;
+    background: #10b98115;
+    border: 1px solid #10b98130;
+    border-radius: 6px;
+    padding: 2px 8px;
+    flex-shrink: 0;
+  }
+  .encrypted-preview {
+    font-size: 11px;
+    font-style: italic;
+    color: #10b981;
+    opacity: 0.85;
+  }
+  .e2ee-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  /* ─── SESSION COUNTDOWN ───────────────────────────────────────────────────── */
+  .session-countdown {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 3px;
+  }
+  .countdown-icon {
+    font-size: 10px;
+    opacity: 0.6;
+  }
+  .countdown-value {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    letter-spacing: 0.05em;
+  }
+  .countdown-urgent .countdown-value {
+    color: #ef4444;
+    animation: urgentPulse 1s infinite;
+  }
+  @keyframes urgentPulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+  }
+  
+  /* Expiring session card highlight */
+  .session-expiring {
+    border: 1px solid #ef444440 !important;
+    background: rgba(239,68,68,0.04) !important;
+  }
+  
+  /* Revoke button */
+  .revoke-btn {
+    white-space: nowrap;
+    min-width: 72px;
+  }
+  
+  /* ─── QR GLOW + CORNER BRACKETS ──────────────────────────────────────────── */
+  .patient-qr-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+  .qr-glow {
+    filter: drop-shadow(0 0 10px rgba(13,148,136,0.35));
+    transition: filter 0.3s ease;
+  }
+  .qr-glow:hover {
+    filter: drop-shadow(0 0 18px rgba(13,148,136,0.6));
+  }
+  
+  .qr-scan-corner {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-color: #0d9488;
+    border-style: solid;
+  }
+  .qr-corner-tl { top: -3px; left: -3px; border-width: 2px 0 0 2px; border-radius: 3px 0 0 0; }
+  .qr-corner-tr { top: -3px; right: -3px; border-width: 2px 2px 0 0; border-radius: 0 3px 0 0; }
+  .qr-corner-bl { bottom: -3px; left: -3px; border-width: 0 0 2px 2px; border-radius: 0 0 0 3px; }
+  .qr-corner-br { bottom: -3px; right: -3px; border-width: 0 2px 2px 0; border-radius: 0 0 3px 0; }
+  
+  /* ─── AUDIT LOG ───────────────────────────────────────────────────────────── */
+  .audit-log-card {
+    padding: 0 !important;
+    overflow: hidden;
+  }
+  .audit-log-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease;
+  }
+  .audit-log-header:hover { background: rgba(255,255,255,0.03); }
+  .audit-log-title-group { display: flex; align-items: center; gap: 12px; }
+  .audit-log-shield { font-size: 22px; }
+  .audit-chevron { font-size: 11px; opacity: 0.5; }
+  .audit-event-count {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--primary);
+    background: rgba(13,148,136,0.12);
+    border-radius: 20px;
+    padding: 2px 9px;
+  }
+  
+  .audit-log-body {
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding: 12px 20px 16px;
+  }
+  
+  .audit-list { display: flex; flex-direction: column; gap: 4px; }
+  
+  .audit-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    border-left: 3px solid transparent;
+    background: rgba(255,255,255,0.02);
+    transition: background 0.15s ease;
+  }
+  .audit-item:hover { background: rgba(255,255,255,0.05); }
+  .audit-item-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+  .audit-item-body { flex: 1; min-width: 0; }
+  .audit-item-message {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .audit-item-time {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 2px;
+    font-family: 'SF Mono', monospace;
+  }
+  .audit-empty { padding: 8px 0; }
+
+  /* ─── HACKATHON BONUS STYLES ─── */
+  
+  /* Emergency SOS Pulse Effect */
+  @keyframes sosPulse {
+    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); transform: scale(1); }
+    50% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); transform: scale(1.05); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); transform: scale(1); }
+  }
+  .sos-pulse-active {
+    animation: sosPulse 1.5s infinite;
+  }
+  
+  /* Elegant Scanline / Scanner beam */
+  @keyframes scannerBeam {
+    0% { transform: translateY(-100%); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateY(100%); opacity: 0; }
+  }
+  .ai-scan-beam {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .ai-scan-beam::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent, rgba(6, 182, 212, 0.4), transparent);
+    animation: scannerBeam 2.5s infinite ease-in-out;
+  }
+
+  /* Beautiful floating tab glow */
+  .tab-glow {
+    position: relative;
+  }
+  .tab-glow::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 12px;
+    background: linear-gradient(45deg, #06b6d4, #3b82f6);
+    opacity: 0;
+    z-index: -1;
+    transition: opacity 0.3s;
+    filter: blur(8px);
+  }
+  .tab-glow:hover::after {
+    opacity: 0.5;
+  }
